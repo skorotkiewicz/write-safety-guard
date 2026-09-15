@@ -1,14 +1,13 @@
 # write-safety-guard
 
-A pi extension: blocks the `write` tool when the target file already exists
-and is not empty. New files and empty files write normally; `edit` is not
-affected (it needs exact old text anyway).
+A pi extension: when the agent wants to write over an existing non-empty file,
+you get a confirmation dialog. New files and empty files write normally;
+`edit` is not affected (it needs exact old text anyway).
 
 ## Why
 
 The agent overwrote a hand-written file once too often. With this extension,
-`write` can only create new files; changing existing ones requires `edit`
-(surgical, reviewable) or an explicit delete-then-write.
+overwrites only happen after you allow them.
 
 ## Install
 
@@ -25,11 +24,13 @@ cp write-safety-guard.ts ~/.pi/agent/extensions/
 
 ## How it works
 
-Hooks the `tool_call` event, inspects `write` tool input, checks the target
-file size, and returns `{ block: true, reason: ... }` for existing non-empty
-files. The agent sees the reason and can adapt (use edit, or ask you first).
+Hooks the `tool_call` event and inspects `write` tool input. If the target
+file exists and is not empty, it calls `ctx.ui.confirm(...)` and asks you:
+allow or block. Allowed, the write proceeds; blocked, the agent receives the
+refusal and adapts (use edit, or ask you first).
 
-## Overriding when you really mean it
+## Behavior
 
-Delete the file first (`rm path`), then write. The guard only protects
-existing non-empty files.
+If the agent wants to write on an existing non-empty file, it needs your
+confirmation: a dialog asks allow or block. No confirmation is needed for new
+or empty files, and `edit` is not affected.
